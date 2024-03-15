@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef } from '@angular/core';
+import { Component, ElementRef, ViewChildren, QueryList } from '@angular/core';
 declare var CrComLib: any;
 
 @Component({
@@ -9,28 +9,30 @@ declare var CrComLib: any;
 export class AppComponent {
   title = 'Angular16App';
 
-    // Find our button in the HMTL rendered view and create a local reference.
-    @ViewChild('myButton') myButton!: ElementRef;
+  // Find all buttons in the HTML rendered view and create a local reference.
+  @ViewChildren('myButton') myButtons!: QueryList<ElementRef>;
 
-    // Tasks to perform when our app (component) loads
-    ngAfterViewInit() {
+  // Tasks to perform when our app (component) loads
+  ngAfterViewInit() {
+    // Loop over each button
+    this.myButtons.forEach(button => {
       // Obtain the feedback Join number that was set as an HTML Attribute
-      let fbJoin = this.myButton.nativeElement.getAttribute('fbJoin');
+      let fbJoin = button.nativeElement.getAttribute('fbJoin');
       // On initialisation get the current state of the button from the Control System.
-      this.btnFb(CrComLib.getState('b', String(fbJoin)));
+      this.btnFb(CrComLib.getState('b', String(fbJoin)), button);
       // Subscribe for future changes to the button state.
-      CrComLib.subscribeState('b', String(fbJoin), (v: any) => { this.btnFb(v); } );
-    }
-  
+      CrComLib.subscribeState('b', String(fbJoin), (v: any) => { this.btnFb(v, button); });
+    });
+  }
+
     // Digital press function
     btnPress(join: any) {
-      CrComLib.publishEvent('b', String(join), true);
-      CrComLib.publishEvent('b', String(join), false);
-    }
-  
+    CrComLib.publishEvent('b', String(join), true);
+    CrComLib.publishEvent('b', String(join), false);
+  }
+
     // Digital feedback function.
-    btnFb(fb: boolean) { 
-      const button = this.myButton.nativeElement; 
-      button.classList.toggle('active', fb); 
-    }
+    btnFb(fb: boolean, button: ElementRef) { 
+    button.nativeElement.classList.toggle('active', fb); 
+  }
 }
